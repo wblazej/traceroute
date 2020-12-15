@@ -1,5 +1,5 @@
 # traceroute
-Traceroute graph generator
+Traceroute graph generator. WSIZ project
 
 ### Requirements
 ```
