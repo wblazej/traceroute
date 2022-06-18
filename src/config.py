@@ -1,0 +1,7 @@
+class Config:
+    TIMEOUT = 1000
+    PACKET_SIZE = 52
+    MAX_HOPS = 64
+    ICMP_ECHO = 8
+    ICMP_ECHO_REPLY = 0
+    ICMP_TIME_EXCEEDED = 11

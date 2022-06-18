@@ -1,49 +1,36 @@
-from random import randint
-import sys
 import argparse
+from igraph import Graph, plot
 
-# libs
-from lib.traceroute import Traceroute
-from lib.generate_graph import GenerateGraph
+from src.traceroute import Traceroute
+from src.config import Config
 
 
 if __name__ == '__main__':
-    # get destination_server as arguemnt
     parser = argparse.ArgumentParser()
     parser.add_argument('destination_server')
-    args = parser.parse_args(sys.argv[1:])
-    destination_server = args.destination_server
+    args = parser.parse_args()
 
-    # settings
-    timeout = 1000
-    packet_size = 52
-    max_hops = 64
+    trace = Traceroute(
+        destination_server=args.destination_server, 
+        timeout=Config.TIMEOUT, 
+        packet_size=Config.PACKET_SIZE, 
+        max_hops=Config.MAX_HOPS)
 
-    # get traceroute
-    trace = Traceroute(destination_server=destination_server, timeout=timeout, packet_size=packet_size, max_hops=max_hops)
     result = trace.start_traceroute()
 
-    # handle error
-    if type(result) == str:
-        print(f'ERROR: {result}')
-        sys.exit()
+    g = Graph(directed=True)
+    g.add_vertices(len(result))
 
-    # generate traceroute graph
-    gg = GenerateGraph(result, 'traceroute.png')
-    res = gg.run()
+    for i, r in enumerate(result):
+        g.vs[i]["id"] = i
+        g.vs[i]["label"] = f'{r.hostname}\n{r.ip}' if not r.timeout else 'timeout'
 
-    # stop if something went wrong
-    if not res['ok']:
-        print(res['message'])
-        sys.exit()
+    g.add_edges([(i, i + 1) for i in range(len(result) - 1)])
 
-    # print graph legend
-    print('Graph legend:', end='\n\n')
-    print(' 0 -- your computer')
-    for i in range(len(result)):
-        prefix = ''
-        if i + 1 < 10:
-            prefix = ' '
-        if not result[i]['timeout']:
-            print(f'{prefix}{i + 1} -- {result[i]["host"]} ({result[i]["ip"]}) -- {result[i]["delay"]}')
-        else: print(f'{prefix}{i + 1} timeout')
+    g.es['label_size'] = 20
+    g.es['label'] = [r.delay_ms for r in result]
+    g.vs['color'] = '#fff'
+
+    plot(g, "result.png", bbox=(1500, 1500), margin=200, vertex_size=200, vertex_label_size=15, layout=g.layout_lgl())
+
+    [print(r) for r in result]
