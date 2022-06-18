@@ -7,3 +7,4 @@ cd traceroute
 pip install -r requirements.txt
 sudo python main.py <address>
 ```
+Graph is saved in `result.png`
